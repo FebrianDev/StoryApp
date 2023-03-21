@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">StoryApp</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="error_email_must_be_filled">Email must be filled</string>
+    <string name="error_email_is_not_valid">Email is not valid</string>
+    <string name="error_password_min_8_char">Password must be filled min 8 characters</string>
+    <string name="error_password_must_be_filled">Password must be filled</string>
+    <string name="register">Register</string>
+    <string name="logo">Logo</string>
+    <string name="error_name_must_be_filled">Name must be filled</string>
+    <string name="name">Name</string>
+    <string name="do_you_have_an_account">Do you have an account?&#160;</string>
+    <string name="login">Login</string>
+    <string name="do_you_haven_t_an_account">Do you haven\'t an account?&#160;</string>
+    <string name="story">Story App</string>
+    <string name="add_story">Add New Story</string>
+    <string name="photo_story">Photo Story</string>
+    <string name="camera">Camera</string>
+    <string name="description">Description</string>
+    <string name="upload">Upload</string>
+    <string name="gallery">Gallery</string>
+    <string name="logout">Logout</string>
+    <string name="are_you_sure_logout">Are you sure logout?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="back">back</string>
+    <string name="did_not_get_permission">Did not get permission</string>
+    <string name="image_must_be_filled">Image must be filled</string>
+    <string name="description_must_be_filled">Description must be filled!</string>
+</resources>
