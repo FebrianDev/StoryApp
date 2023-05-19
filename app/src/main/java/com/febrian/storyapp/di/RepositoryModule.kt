@@ -1,8 +1,10 @@
 package com.febrian.storyapp.di
 
 import com.febrian.storyapp.data.api.ApiService
+import com.febrian.storyapp.data.db.StoryDatabase
 import com.febrian.storyapp.data.repository.AuthRepository
 import com.febrian.storyapp.data.repository.StoryRepository
+import com.febrian.storyapp.utils.UserPreference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,5 +23,10 @@ class RepositoryModule {
     //Provide Story Repository
     @Provides
     @Singleton
-    fun provideStoryRepository(apiService: ApiService) = StoryRepository(apiService)
+    fun provideStoryRepository(
+        database: StoryDatabase,
+        apiService: ApiService,
+        userPreference: UserPreference
+    ) =
+        StoryRepository(database, apiService, userPreference)
 }

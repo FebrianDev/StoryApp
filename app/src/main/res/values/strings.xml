@@ -25,7 +25,11 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="back">back</string>
-    <string name="did_not_get_permission">Did not get permission</string>
     <string name="image_must_be_filled">Image must be filled</string>
     <string name="description_must_be_filled">Description must be filled!</string>
+    <string name="title_activity_maps">MapsActivity</string>
+    <string name="retry">Retry</string>
+    <string name="setting">Setting</string>
+    <string name="get_location">Get Location</string>
+    <string name="did_get_permission">Did get permission</string>
 </resources>

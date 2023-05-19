@@ -1,6 +1,7 @@
 package com.febrian.storyapp.ui.story
 
 import android.os.Bundle
+import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -9,7 +10,6 @@ import com.febrian.storyapp.databinding.ActivityDetailBinding
 import com.febrian.storyapp.ui.story.vm.StoryViewModel
 import com.febrian.storyapp.utils.Constant
 import com.febrian.storyapp.utils.Helper
-import com.febrian.storyapp.utils.UserPreference
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -21,9 +21,6 @@ class DetailActivity : AppCompatActivity() {
     private val storyViewModel: StoryViewModel by viewModels()
 
     @Inject
-    lateinit var userPreference: UserPreference
-
-    @Inject
     lateinit var helper: Helper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +30,7 @@ class DetailActivity : AppCompatActivity() {
 
         val id = intent.getStringExtra(Constant.ID_STORY)
 
-        storyViewModel.getDetailStory(userPreference.getToken(), id.toString())
+        storyViewModel.getDetailStory(id.toString())
         observerResults()
 
         binding.back.setOnClickListener { finish() }
@@ -43,10 +40,11 @@ class DetailActivity : AppCompatActivity() {
         storyViewModel.resultDetailStory.observe(this) {
             it.onSuccess { data ->
                 helper.showToast(data.message.toString())
-                Glide.with(this).load(data.story?.photoUrl)
-                    .error(R.drawable.baseline_broken_image_24).into(binding.photo)
-                binding.name.text = data.story?.name.toString()
-                binding.description.text = data.story?.description.toString()
+                binding.apply {
+                    photo.loadImage(data.story?.photoUrl)
+                    name.text = data.story?.name.toString()
+                    description.text = data.story?.description.toString()
+                }
             }
             it.onFailure { t ->
                 helper.showToast(t.message.toString())
@@ -56,5 +54,12 @@ class DetailActivity : AppCompatActivity() {
         storyViewModel.loading.observe(this) { active ->
             helper.showLoading(active, binding.loading)
         }
+    }
+
+    private fun ImageView.loadImage(url: String?) {
+        Glide.with(this.context)
+            .load(url)
+            .error(R.drawable.baseline_broken_image_24)
+            .into(this)
     }
 }

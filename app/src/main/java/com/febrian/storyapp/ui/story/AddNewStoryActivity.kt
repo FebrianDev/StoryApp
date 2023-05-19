@@ -4,10 +4,12 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -17,7 +19,10 @@ import com.febrian.storyapp.databinding.ActivityAddNewStoryBinding
 import com.febrian.storyapp.ui.story.vm.StoryViewModel
 import com.febrian.storyapp.utils.Helper
 import com.febrian.storyapp.utils.MediaUtils
-import com.febrian.storyapp.utils.UserPreference
+import com.febrian.storyapp.utils.PickSinglePhotoContract
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -30,44 +35,107 @@ class AddNewStoryActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityAddNewStoryBinding
 
-    companion object {
-        private val REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-        )
-        private const val REQUEST_CODE_PERMISSIONS = 10
-    }
-
     private val storyViewModel: StoryViewModel by viewModels()
 
     @Inject
     lateinit var helper: Helper
 
-    @Inject
-    lateinit var userPreference: UserPreference
-
     private var imagePart: MultipartBody.Part? = null
 
+    private var latLng: LatLng? = null
+
+    private val locationPermissionCode = 123
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNewStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        if (!allPermissionsGranted()) {
-            ActivityCompat.requestPermissions(
-                this,
-                REQUIRED_PERMISSIONS,
-                REQUEST_CODE_PERMISSIONS
-            )
-        }
 
         binding.btnCamera.setOnClickListener(this)
         binding.btnGallery.setOnClickListener(this)
         binding.btnUpload.setOnClickListener(this)
         binding.back.setOnClickListener(this)
 
+        binding.switchLocation.setOnCheckedChangeListener { _, isChecked ->
+            if (!isChecked) return@setOnCheckedChangeListener
+            if (isLocationPermissionGranted()) {
+                getCurrentLocation()
+            } else {
+                requestLocationPermissions()
+            }
+        }
+
         observerResults()
+    }
+
+    private fun isLocationPermissionGranted(): Boolean {
+        val fineLocationPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        val coarseLocationPermission = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        return fineLocationPermission == PackageManager.PERMISSION_GRANTED &&
+                coarseLocationPermission == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocationPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            locationPermissionCode
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == locationPermissionCode) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Location permissions granted, proceed with getting location
+                getCurrentLocation()
+            } else {
+                helper.showToast(getString(R.string.did_get_permission))
+            }
+        }
+    }
+
+    private fun getCurrentLocation() {
+        val fusedLocationClient: FusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(this)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            helper.showToast(getString(R.string.did_get_permission))
+            return
+        }
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location ->
+                latLng = if (location != null) {
+                    val latitude = location.latitude
+                    val longitude = location.longitude
+
+                    LatLng(latitude, longitude)
+
+                } else {
+                    LatLng(0.0, 0.0)
+                }
+            }.addOnFailureListener {
+                helper.showToast(it.message.toString())
+            }
+
     }
 
     private fun observerResults() {
@@ -96,33 +164,18 @@ class AddNewStoryActivity : AppCompatActivity(), View.OnClickListener {
                 uri = MediaUtils.bitmapToUri(this, result.data?.extras?.get("data") as Bitmap)
             }
 
-            binding.photo.setImageURI(uri)
-
-            val file = MediaUtils.uriToFile(uri!!, this)
-            val newFile = MediaUtils.reduceFileImage(file)
-            val requestBody: RequestBody = newFile.asRequestBody("image/*".toMediaTypeOrNull())
-            imagePart =
-                MultipartBody.Part.createFormData("photo", newFile.name, requestBody)
-
+            uriToMultipart(uri)
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (!allPermissionsGranted()) {
-                helper.showToast(getString(R.string.did_not_get_permission))
-                finish()
-            }
-        }
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
+    private fun uriToMultipart(uri: Uri?) {
+        if (uri == null) return
+        binding.photo.setImageURI(uri)
+        val file = MediaUtils.uriToFile(uri, this)
+        val newFile = MediaUtils.reduceFileImage(file)
+        val requestBody: RequestBody = newFile.asRequestBody("image/*".toMediaTypeOrNull())
+        imagePart =
+            MultipartBody.Part.createFormData("photo", newFile.name, requestBody)
     }
 
     private fun pickImageFromCamera() {
@@ -130,13 +183,12 @@ class AddNewStoryActivity : AppCompatActivity(), View.OnClickListener {
         launcherIntentCamera.launch(cameraIntent)
     }
 
-    private fun pickImageFromGallery() {
-        val galleryIntent = Intent()
-        galleryIntent.type = "image/*"
-        galleryIntent.action = Intent.ACTION_GET_CONTENT
-        galleryIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        launcherIntentCamera.launch(galleryIntent)
-    }
+    private val singlePhotoPickerLauncher =
+        registerForActivityResult(PickSinglePhotoContract()) { imageUri: Uri? ->
+            uriToMultipart(imageUri)
+        }
+
+    private fun pickImageFromGallery() = singlePhotoPickerLauncher.launch()
 
     private fun uploadStory() {
 
@@ -152,9 +204,9 @@ class AddNewStoryActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         storyViewModel.addNewStory(
-            userPreference.getToken(),
             imagePart!!,
-            description
+            description,
+            latLng
         )
     }
 
@@ -163,7 +215,7 @@ class AddNewStoryActivity : AppCompatActivity(), View.OnClickListener {
             binding.btnCamera -> pickImageFromCamera()
             binding.btnGallery -> pickImageFromGallery()
             binding.btnUpload -> uploadStory()
-            binding.back -> finish()
+            binding.back -> helper.moveActivityWithFinish(AddNewStoryActivity(), MainActivity())
         }
     }
 }

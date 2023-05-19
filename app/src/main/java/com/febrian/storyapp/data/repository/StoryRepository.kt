@@ -1,22 +1,39 @@
 package com.febrian.storyapp.data.repository
 
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.febrian.storyapp.data.StoryRemoteMediator
 import com.febrian.storyapp.data.api.ApiService
+import com.febrian.storyapp.data.db.StoryDatabase
 import com.febrian.storyapp.data.response.AddStoryResponse
 import com.febrian.storyapp.data.response.DetailStoryResponse
+import com.febrian.storyapp.data.response.Story
 import com.febrian.storyapp.data.response.StoryResponse
-import okhttp3.MediaType.Companion.toMediaType
+import com.febrian.storyapp.utils.UserPreference
+import kotlinx.coroutines.flow.Flow
 import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody
 import javax.inject.Inject
 
-class StoryRepository @Inject constructor(private val apiService: ApiService) {
+class StoryRepository @Inject constructor(
+    private val database: StoryDatabase,
+    private val apiService: ApiService,
+    private val userPreference: UserPreference
+) {
 
     suspend fun addNewStory(
-        token: String, image: MultipartBody.Part, description: String
+        image: MultipartBody.Part, description: RequestBody, lat: Float? = null, lon: Float? = null
     ): Result<AddStoryResponse> {
         return try {
+            val token = "Bearer ${userPreference.getToken()}"
             val addStory = apiService.addNewStory(
-                "Bearer $token", image, description.toRequestBody("text/plain".toMediaType())
+                token,
+                image,
+                description,
+                lat,
+                lon
             )
             Result.success(addStory)
         } catch (e: Exception) {
@@ -24,17 +41,46 @@ class StoryRepository @Inject constructor(private val apiService: ApiService) {
         }
     }
 
-    suspend fun getAllStories(token: String): Result<StoryResponse> {
+    fun getAllStories(): Flow<PagingData<Story>> {
+        val token = "Bearer ${userPreference.getToken()}"
+        @OptIn(ExperimentalPagingApi::class)
+        return Pager(
+            config = PagingConfig(
+                pageSize = 5
+            ),
+            remoteMediator = StoryRemoteMediator(token, apiService, database),
+            pagingSourceFactory = {
+                database.storyDao().getAllStory()
+            }
+        ).flow
+    }
+
+    /* fun getStories(): Flow<PagingData<Story>> {
+         val token = "Bearer ${userPreference.getToken()}"
+         return Pager(
+             config = PagingConfig(
+                 pageSize = 5
+             ),
+             pagingSourceFactory = {
+                 StoryPagingResource(apiService, token)
+             }
+         ).flow
+     }*/
+
+    suspend fun getStoriesWithLocation(): Result<StoryResponse> {
         return try {
-            Result.success(apiService.getAllStories("Bearer $token"))
+            val token = "Bearer ${userPreference.getToken()}"
+            val response = apiService.getAllStories(token, size = 30, location = 1)
+            Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getDetailStory(token: String, id: String): Result<DetailStoryResponse> {
+    suspend fun getDetailStory(id: String): Result<DetailStoryResponse> {
         return try {
-            Result.success(apiService.getDetailStory("Bearer $token", id))
+            val token = "Bearer ${userPreference.getToken()}"
+            Result.success(apiService.getDetailStory(token, id))
         } catch (e: Exception) {
             Result.failure(e)
         }

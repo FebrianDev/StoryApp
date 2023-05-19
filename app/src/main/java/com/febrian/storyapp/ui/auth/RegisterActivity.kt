@@ -46,14 +46,17 @@ class RegisterActivity : AppCompatActivity(), View.OnClickListener {
                 helper.showToast(getString(R.string.error_name_must_be_filled))
                 false
             }
+
             email.isEmpty() -> {
                 helper.showToast(getString(R.string.error_email_must_be_filled))
                 false
             }
+
             password.isEmpty() -> {
                 helper.showToast(getString(R.string.error_password_must_be_filled))
                 false
             }
+
             else -> true
         }
     }
@@ -86,6 +89,7 @@ class RegisterActivity : AppCompatActivity(), View.OnClickListener {
             binding.btnRegister -> {
                 register()
             }
+
             binding.btnLogin -> {
                 helper.moveActivityWithFinish(this, LoginActivity())
             }

@@ -2,14 +2,17 @@ package com.febrian.storyapp.ui.story
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.febrian.storyapp.R
-import com.febrian.storyapp.data.response.Story
 import com.febrian.storyapp.databinding.ActivityMainBinding
 import com.febrian.storyapp.ui.auth.LoginActivity
+import com.febrian.storyapp.ui.maps.MapsActivity
+import com.febrian.storyapp.ui.story.adapter.LoadingStateAdapter
 import com.febrian.storyapp.ui.story.adapter.StoryAdapter
 import com.febrian.storyapp.ui.story.callback.StoryCallback
 import com.febrian.storyapp.ui.story.vm.StoryViewModel
@@ -24,8 +27,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, StoryCallback {
 
     private lateinit var binding: ActivityMainBinding
 
-    private lateinit var storyAdapter: StoryAdapter
-
     private val storyViewModel: StoryViewModel by viewModels()
 
     @Inject
@@ -38,41 +39,35 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, StoryCallback {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        storyAdapter = StoryAdapter(arrayListOf(), this)
-        storyViewModel.getAllStories(userPreference.getToken())
 
         binding.addStory.setOnClickListener(this)
+        binding.maps.setOnClickListener(this)
+        binding.setting.setOnClickListener(this)
         binding.logout.setOnClickListener(this)
-
-        observerResults()
+        getData()
     }
 
-    private fun observerResults() {
-        storyViewModel.resultStory.observe(this) {
-            it.onSuccess { data ->
-                helper.showToast(data.message.toString())
-                showData(data.listStory as ArrayList<Story>)
-            }
-            it.onFailure { t ->
-                helper.showToast(t.message.toString())
-            }
+    private fun getData() {
+        val storyAdapter = StoryAdapter(this)
+        binding.rvStory.apply {
+            setHasFixedSize(true)
+            layoutManager = LinearLayoutManager(this@MainActivity)
+            adapter = storyAdapter.withLoadStateFooter(footer = LoadingStateAdapter {
+                storyAdapter.retry()
+            })
         }
 
-        storyViewModel.loading.observe(this) { active ->
-            helper.showLoading(active, binding.loading)
+        storyViewModel.stories.observe(this) {
+            storyAdapter.submitData(lifecycle, it)
         }
     }
 
-    private fun showData(listStory: ArrayList<Story>) {
-        storyAdapter.setItem(listStory)
-        binding.rvStory.setHasFixedSize(true)
-        binding.rvStory.layoutManager = LinearLayoutManager(this)
-        binding.rvStory.adapter = storyAdapter
+    private fun setupAction() {
+        startActivity(Intent(Settings.ACTION_LOCALE_SETTINGS))
     }
 
     private fun logout() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setIcon(R.drawable.baseline_logout_24)
+        androidx.appcompat.app.AlertDialog.Builder(this).setIcon(R.drawable.baseline_logout_24)
             .setTitle(getString(R.string.logout))
             .setMessage(getString(R.string.are_you_sure_logout)).setPositiveButton(
                 getString(R.string.yes)
@@ -84,7 +79,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, StoryCallback {
 
     override fun onClick(v: View?) {
         when (v) {
-            binding.addStory -> helper.moveActivity(this, AddNewStoryActivity())
+            binding.addStory -> helper.moveActivityWithFinish(this, AddNewStoryActivity())
+            binding.maps -> helper.moveActivity(this, MapsActivity())
+            binding.setting -> setupAction()
             binding.logout -> logout()
         }
     }
@@ -92,6 +89,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, StoryCallback {
     override fun getDetail(id: String) {
         val intent = Intent(this, DetailActivity::class.java)
         intent.putExtra(Constant.ID_STORY, id)
-        startActivity(intent)
+        startActivity(intent, ActivityOptionsCompat.makeSceneTransitionAnimation(this).toBundle())
     }
 }

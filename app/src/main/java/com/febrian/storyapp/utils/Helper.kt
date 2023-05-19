@@ -26,11 +26,7 @@ class Helper(private val context: Context) {
     }
 
     fun showLoading(isLoading: Boolean, view: View) {
-        if (isLoading) {
-            view.visibility = View.VISIBLE
-        } else {
-            view.visibility = View.GONE
-        }
+        view.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     fun setEnableView(isEnable: Boolean, view: View) {

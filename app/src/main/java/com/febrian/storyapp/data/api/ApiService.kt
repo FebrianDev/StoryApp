@@ -31,13 +31,18 @@ interface ApiService {
     suspend fun addNewStory(
         @Header("Authorization") token: String,
         @Part photo: MultipartBody.Part,
-        @Part("description") description: RequestBody
+        @Part("description") description: RequestBody,
+        @Part("lat") lat: Float?,
+        @Part("lon") lon: Float?
     ): AddStoryResponse
 
 
     //Get All Stories
     @GET("stories")
-    suspend fun getAllStories(@Header("Authorization") token: String): StoryResponse
+    suspend fun getAllStories(
+        @Header("Authorization") token: String, @Query("page") page: Int? = null,
+        @Query("size") size: Int? = null, @Query("location") location: Int? = 0
+    ): StoryResponse
 
 
     //Get Detail Stories

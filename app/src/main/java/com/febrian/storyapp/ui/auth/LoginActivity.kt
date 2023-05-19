@@ -54,12 +54,14 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                 binding.edtEmail.error = message
                 false
             }
+
             password.isEmpty() -> {
                 val message = getString(R.string.error_password_must_be_filled)
                 helper.showToast(message)
                 binding.edtPassword.error = message
                 false
             }
+
             else -> true
         }
     }
@@ -97,6 +99,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
             binding.btnLogin -> {
                 login()
             }
+
             binding.btnRegister -> {
                 helper.moveActivityWithFinish(this, RegisterActivity())
             }

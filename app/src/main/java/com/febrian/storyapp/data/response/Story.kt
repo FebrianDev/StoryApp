@@ -1,7 +1,12 @@
 package com.febrian.storyapp.data.response
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "story")
 data class Story(
-    var id: String? = null,
+    @PrimaryKey
+    var id: String,
     var name: String? = null,
     var description: String? = null,
     var photoUrl: String? = null,

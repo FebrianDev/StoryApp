@@ -27,6 +27,10 @@ class SplashScreenActivity : AppCompatActivity() {
     @Inject
     lateinit var helper: Helper
 
+    companion object {
+        const val DELAY = 1500L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySplashScreenBinding.inflate(layoutInflater)
@@ -34,14 +38,15 @@ class SplashScreenActivity : AppCompatActivity() {
 
         Handler(Looper.getMainLooper()).postDelayed({
             if (userPreference.getToken().isEmpty()) {
-                helper.moveActivity(this, RegisterActivity())
+                helper.moveActivityWithFinish(this, RegisterActivity())
             } else {
-                helper.moveActivity(this, MainActivity())
+                helper.moveActivityWithFinish(this, MainActivity())
             }
-        }, 1500)
+        }, DELAY)
 
         logoAnimation()
         textAnimation()
+
     }
 
     private fun logoAnimation() {

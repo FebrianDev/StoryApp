@@ -1,7 +1,12 @@
 package com.febrian.storyapp.di
 
+import android.app.Application
+import androidx.room.Room
 import com.febrian.storyapp.BuildConfig
 import com.febrian.storyapp.data.api.ApiService
+import com.febrian.storyapp.data.db.RemoteKeysDao
+import com.febrian.storyapp.data.db.StoryDao
+import com.febrian.storyapp.data.db.StoryDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,6 +45,26 @@ class AppModule {
     @Singleton
     fun provideAPi(retrofit: Retrofit): ApiService {
         return retrofit.create(ApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(application: Application): StoryDatabase {
+        return Room.databaseBuilder(application, StoryDatabase::class.java, "story_database")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStoryDao(database: StoryDatabase): StoryDao {
+        return database.storyDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoteKeysDao(database: StoryDatabase): RemoteKeysDao {
+        return database.remoteKeysDao()
     }
 
 }

@@ -13,7 +13,6 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.ContextCompat
 import com.febrian.storyapp.R
 
-
 class PasswordEditText : AppCompatEditText {
 
     private lateinit var passwordIconDrawable: Drawable

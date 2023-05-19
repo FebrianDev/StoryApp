@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StoryApp</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="error_email_must_be_filled">Email harus diisi</string>
+    <string name="error_email_is_not_valid">Email tidak valid</string>
+    <string name="error_password_min_8_char">Password harus diisi minimal 8 characters</string>
+    <string name="error_password_must_be_filled">Password harus diisi</string>
+    <string name="register">Register</string>
+    <string name="logo">Logo</string>
+    <string name="error_name_must_be_filled">Nama harus diisi</string>
+    <string name="name">Nama</string>
+    <string name="do_you_have_an_account">Apakah kamu sudah punya akun?&#160;</string>
+    <string name="login">Login</string>
+    <string name="do_you_haven_t_an_account">Apakah kamu belum punya akun?&#160;</string>
+    <string name="story">Story App</string>
+    <string name="add_story">Tambahkan Story Baru</string>
+    <string name="photo_story">Photo Story</string>
+    <string name="camera">Kamera</string>
+    <string name="description">Deskripsi</string>
+    <string name="upload">Upload</string>
+    <string name="gallery">Gallery</string>
+    <string name="logout">Logout</string>
+    <string name="are_you_sure_logout">Apakah kamu yakin untuk logout?</string>
+    <string name="yes">Ya</string>
+    <string name="no">Tidak</string>
+    <string name="back">Kembali</string>
+    <string name="image_must_be_filled">Gambar harus diisi</string>
+    <string name="description_must_be_filled">Deskripsi harus diisi</string>
+    <string name="title_activity_maps">MapsActivity</string>
+    <string name="retry">Coba Lagi</string>
+    <string name="setting">Pengaturan </string>
+    <string name="get_location">Dapatkan Lokasi</string>
+    <string name="did_get_permission">Tidak mendapatkan izin</string>
+</resources>
